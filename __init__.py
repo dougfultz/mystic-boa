@@ -1,25 +1,35 @@
-#rss-get
+#mystic-boa
 
 import os
 import feedparser
 
 #initialization
 workingDir="/home/videos"
+feeds=["http://revision3.com/diggnation/feed/quicktime-high-definition","http://revision3.com/trs/feed/quicktime-high-definition"]
+itemTypes=["video/quicktime"]
 
-curFeed=feedparser.parse("http://revision3.com/diggnation/feed/quicktime-high-definition")
-
-os.chdir(workingDir)
-
-print "Checking if directory, "+curFeed.feed.title+", exists."
-if (os.path.exists(curFeed.feed.title)==False):
-    print "\tDirectory does not exist, creating it.\n"
-    os.mkdir(curFeed.feed.title)
-else:
-    print "\tDirectory Exists.\n"
+for curFeedNum in range(0,len(feeds)):
+    os.chdir(workingDir)
     
-#loop through entries in feed
-for i in range(24,len(curFeed['entries'])):
-    print curFeed.entries[i].title
-    print curFeed.entries[i].enclosures[0].href
-    print curFeed.entries[i].enclosures[0].length
-    print curFeed.entries[i].enclosures[0].type
+    curFeed=feedparser.parse(feeds[curFeedNum])
+    
+    print "Checking if directory, "+curFeed.feed.title+", exists."
+    if (os.path.exists(curFeed.feed.title)==False):
+        print "\tDirectory does not exist, creating it.\n"
+        os.mkdir(curFeed.feed.title)
+    else:
+        print "\tDirectory Exists.\n"
+    os.chdir(workingDir+"/"+curFeed.feed.title)
+        
+    #loop through entries in feed
+    for item in range(24,len(curFeed['entries'])):
+        print curFeed.entries[item].title
+        for enc in range(0,len(curFeed.entries[item].enclosures)): 
+            print enc
+            print curFeed.entries[item].enclosures[enc].href
+            print curFeed.entries[item].enclosures[enc].type
+            if (curFeed.entries[item].enclosures[enc].type in itemTypes):
+                print "Downloading - "+curFeed.entries[item].title
+                os.system("wget -c "+curFeed.entries[item].enclosures[enc].href)
+                print "Finished Downloading - "+curFeed.entries[item].title
+        print "\n\n\n\n"
