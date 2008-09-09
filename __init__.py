@@ -7,29 +7,32 @@ import feedparser
 workingDir="/home/videos"
 feeds=["http://revision3.com/diggnation/feed/quicktime-high-definition","http://revision3.com/trs/feed/quicktime-high-definition"]
 itemTypes=["video/quicktime"]
+wgetLocation="wget"
+wgetOptions="-c"
 
 for curFeedNum in range(0,len(feeds)):
     os.chdir(workingDir)
     
     curFeed=feedparser.parse(feeds[curFeedNum])
-    
-    print "Checking if directory, "+curFeed.feed.title+", exists."
+    print "Processing... "+curFeed.feed.title
+    print "\tChecking if directory, "+curFeed.feed.title+", exists."
     if (os.path.exists(curFeed.feed.title)==False):
-        print "\tDirectory does not exist, creating it.\n"
+        print "\tDirectory does not exist, creating it."
         os.mkdir(curFeed.feed.title)
     else:
-        print "\tDirectory Exists.\n"
+        print "\tDirectory Exists."
     os.chdir(workingDir+"/"+curFeed.feed.title)
         
     #loop through entries in feed
     for item in range(24,len(curFeed['entries'])):
-        print curFeed.entries[item].title
-        for enc in range(0,len(curFeed.entries[item].enclosures)): 
-            print enc
-            print curFeed.entries[item].enclosures[enc].href
-            print curFeed.entries[item].enclosures[enc].type
-            if (curFeed.entries[item].enclosures[enc].type in itemTypes):
-                print "Downloading - "+curFeed.entries[item].title
-                os.system("wget -c "+curFeed.entries[item].enclosures[enc].href)
-                print "Finished Downloading - "+curFeed.entries[item].title
+        print "Processing... "+curFeed.entries[item].title
+        for enc in range(0,len(curFeed.entries[item].enclosures)):
+            temp=curFeed.entries[item].enclosures[enc].href.split("/")
+            
+            if (curFeed.entries[item].enclosures[enc].type in itemTypes) and (os.path.exists(temp[len(temp)-1])==False):
+                print "\tDownloading - "+curFeed.entries[item].title
+                os.system(wgetLocation+" "+wgetOptions+" "+curFeed.entries[item].enclosures[enc].href)
+                print "\tFinished Downloading - "+curFeed.entries[item].title
+            else:
+                print "\t"+curFeed.entries[item].title+" already exists."
         print "\n\n\n\n"
