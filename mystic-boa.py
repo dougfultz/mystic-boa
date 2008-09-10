@@ -29,7 +29,7 @@ for curFeedNum in range(0,len(feeds)):
         for enc in range(0,len(curFeed.entries[item].enclosures)):
             temp=curFeed.entries[item].enclosures[enc].href.split("/")
             
-            if (curFeed.entries[item].enclosures[enc].type in itemTypes) and (os.path.exists(temp[len(temp)-1])==False):
+            if (curFeed.entries[item].enclosures[enc].type in itemTypes):
                 print "\tDownloading - "+curFeed.entries[item].title
                 os.system(wgetLocation+" "+wgetOptions+" "+curFeed.entries[item].enclosures[enc].href)
                 print "\tFinished Downloading - "+curFeed.entries[item].title
