@@ -29,6 +29,6 @@ for curFeedNum in range(0,len(feeds)):
         print curFeed.entries[item].title
         for enc in range(0,len(curFeed.entries[item].enclosures)):
             print "Downloading - "+curFeed.entries[item].title
-            #os.system("wget -c "+curFeed.entries[item].enclosures[enc].href)
+            os.system("wget -c "+curFeed.entries[item].enclosures[enc].href)
             print "Finished Downloading - "+curFeed.entries[item].title
         print "\n\n\n\n"
