@@ -4,11 +4,13 @@
 
 import os
 import feedparser
+import ConfigParser
 
 #initialization
-workingDir="/home/videos"
-feeds=["http://revision3.com/diggnation/feed/quicktime-high-definition","http://revision3.com/diggreel/feed/quicktime-high-definition"]
-feeds2=["http://revision3.com/diggnation/feed/quicktime-high-definition","http://revision3.com/diggreel/feed/quicktime-high-definition","http://revision3.com/epicfu/feed/quicktime-large","http://revision3.com/hak5/feed/quicktime-large","http://revision3.com/internetsuperstar/feed/quicktime-high-definition","http://revision3.com/internetsuperstar/feed/quicktime-high-definition","http://revision3.com/rev3gazette/feed/quicktime-high-definition","http://revision3.com/scamschool/feed/quicktime-high-definition","http://revision3.com/systm/feed/quicktime-high-definition","http://revision3.com/tekzilla/feed/quicktime-high-definition","http://revision3.com/trs/feed/quicktime-high-definition","http://revision3.com/webdrifter/feed/quicktime-high-definition","http://revision3.com/winelibrarytv/feed/quicktime-high-definition"]
+configFile="./mystic-boa.conf"
+ini=ConfigParser.ConfigParser()
+ini.read(configFile)
+
 #----------------------------------------------------------------------------
 def checkCreateDir(path, dirName):
 	"""Checks to verify that the directory exists.  If the directory does not exist then create the directory."""
@@ -25,7 +27,7 @@ def downloadFile(title,fileURL):
 	os.system("wget -c "+fileURL)
 	print "Finished Downloading content - "+title
 #----------------------------------------------------------------------------
-def processFeed(curFeedURL):
+def processFeed(workingDir, curFeedURL):
 	"""Processes the current feed URL"""
 	os.chdir(workingDir)
 	print "Downloading and parsing - "+curFeedURL
@@ -39,9 +41,28 @@ def processFeed(curFeedURL):
 		for enc in range(0,len(curFeed.entries[item].enclosures)):
 			downloadFile(curFeed.entries[item].title,curFeed.entries[item].enclosures[enc].href)
 		print "\n\n\n\n"
+#---------------------------------------------------------------------------
+def getSections():
+	"""Reads the config file and returns a list of the sections."""
+	goodSections=[]
+	for folder in ini.sections():
+		if (os.path.exists(folder)==True):
+			goodSections.append(folder)
+		else:
+			print "Section "+folder+" is not a valid path.  Please edit the config or create the directory."
+			os.system("sleep 60s")
+	return goodSections
+#----------------------------------------------------------------------------
+def getFeeds(section):
+	"""Returns the list of feeds in the current section."""
+	goodItems=[]
+	for item in ini.items(section):
+		goodItems.append(item[len(item)-1])
+	return goodItems
 #  MAIN  ####################################################################
 
 print "Mystic-Boa"
 
-for curFeedNum in range(0,len(feeds)):
-	processFeed(feeds[curFeedNum])
+for curSection in getSections():
+	for curFeed in getFeeds(curSection):
+		processFeed(curSection,curFeed)
