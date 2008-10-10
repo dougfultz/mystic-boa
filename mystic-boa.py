@@ -7,8 +7,8 @@ import feedparser
 import ConfigParser
 
 #initialization
-configFile="./mystic-boa.conf"
-ini=ConfigParser.ConfigParser()
+configFile=os.getcwd()+"/mystic-boa.conf"
+ini=ConfigParser.SafeConfigParser()
 ini.read(configFile)
 
 #----------------------------------------------------------------------------
@@ -55,9 +55,24 @@ def getSections():
 #----------------------------------------------------------------------------
 def getFeeds(section):
 	"""Returns the list of feeds in the current section."""
-	goodItems=[]
-	for item in ini.items(section):
-		goodItems.append(item[len(item)-1])
+	f = open(configFile)
+	try:
+		for line in f:
+			goodItems = []
+			section="["+section+"]"
+			while section not in line:
+				line = f.next()
+			line = f.next()
+			while not line.startswith('['):
+				item=line.strip()
+				item=item.split('=')
+				if (item[0]=="feedURL"):
+					goodItems.append(item[1])
+				line = f.next()
+			break
+	except StopIteration:
+		pass
+	f.close()
 	return goodItems
 #  MAIN  ####################################################################
 
