@@ -38,6 +38,9 @@ def downloadFile(title,fileURL):
 	if (rc==0):
 		try:
 			print "Moving "+getFileName(fileURL)+" from "+tempDir+" to "+downloadDir+"."
+			for filename in os.listdir('.'):
+				if (filename.startswith(getFileName(fileURL))==True):
+					os.rename(filename,getFileName(fileURL))
 			os.system("mv \""+tempDir+"/"+getFileName(fileURL)+"\" \""+downloadDir+"/\"")
 		except:
 			print "move failed"
