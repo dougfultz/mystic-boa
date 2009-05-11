@@ -11,6 +11,7 @@ configFile=os.getcwd()+"/mystic-boa.conf"
 ini=ConfigParser.SafeConfigParser()
 ini.read(configFile)
 tempDir=None
+numItems=None
 errors=[]
 
 #----------------------------------------------------------------------------
@@ -58,12 +59,15 @@ def processFeed(workingDir, curFeedURL):
     os.chdir(workingDir+"/"+curFeed.feed.title)
 
     #loop through entries in feed
-    for item in range(0,len(curFeed['entries'])):
-        for enc in range(0,len(curFeed.entries[item].enclosures)):
-            if(os.path.exists(getFileName(curFeed.entries[item].enclosures[enc].href))==True):
-                print getFileName(curFeed.entries[item].enclosures[enc].href)+" already exists."
-            else:
-                downloadFile(curFeed.entries[item].title,curFeed.entries[item].enclosures[enc].href)
+    for item in range(0,numItems):
+        try:
+            for enc in range(0,len(curFeed.entries[item].enclosures)):
+                if(os.path.exists(getFileName(curFeed.entries[item].enclosures[enc].href))==True):
+                    print getFileName(curFeed.entries[item].enclosures[enc].href)+" already exists."
+                else:
+                    downloadFile(curFeed.entries[item].title,curFeed.entries[item].enclosures[enc].href)
+        except:
+            print "Error Occurred."
 #---------------------------------------------------------------------------
 def getSections():
     """Reads the config file and returns a list of the sections."""
@@ -104,11 +108,21 @@ def setGlobals():
     """Checks all values from global section to verify that the config is correct."""
     goodList=[]
     global tempDir
+    global numItems
     tempDir=ini.get("global","tempDir")
+    numItems=ini.get("global","numItems")
+    try:
+        numItems=int(numItems)
+    except:
+        numItems=0
     if (os.path.exists(tempDir)==False):
         print tempDir+" is not a valid path.  Please edit the config or create the directory."
         goodList.append(False)
         tempDir=None
+    if (numItems<=0):
+        print "numItems, must be 1 or greater."
+        goodList.append(False)
+        numItems=None
     for good in goodList:
         if (good==False):
             return good
