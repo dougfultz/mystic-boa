@@ -11,6 +11,7 @@ configFile=os.getcwd()+"/mystic-boa.conf"
 ini=ConfigParser.SafeConfigParser()
 ini.read(configFile)
 tempDir=None
+lockFile="mystic-boa.lock"
 numItems=None
 errors=[]
 
@@ -127,12 +128,24 @@ def setGlobals():
         if (good==False):
             return good
     return True
+#----------------------------------------------------------------------------
+def runLock():
+    """Checks to see if other instances are running, if not create run lock."""
+    if (not tempDir==None):
+        if (os.path.isfile(tempDir+"/"+lockFile)==False):
+            #create lock with pid written to file
+            f = open(tempDir+"/"+lockFile,'w')
+            f.write(str(os.getpid()))
+            return True
+        else:
+            print "Another instance may already be running.  If this is in error please delete this file: "+tempDir+"/"+lockFile
+    return False
 #  MAIN  ####################################################################
 
 print "Mystic-Boa"
 
 try:
-    if (setGlobals()==True):
+    if (setGlobals()==True and runLock()==True):
         for curSection in getSections():
             for curFeed in getFeeds(curSection):
                 try:
@@ -142,7 +155,9 @@ try:
                     print detail
                     os.system("sleep 30s")
                     errors.append(curFeed+" has had the following error "+detail.args)
+        os.remove(tempDir+"/"+lockFile)
 except KeyboardInterrupt:
     print "Canceled by user."
+    os.remove(tempDir+"/"+lockFile)
 
 print "Errors:\n",errors
