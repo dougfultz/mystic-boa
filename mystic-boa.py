@@ -23,7 +23,7 @@ def checkCreateDir(path, dirName):
         print "\tDirectory does not exist, creating it.\n"
         os.mkdir(dirName)
     else:
-        print "\tDirectory Exists.\n"
+        print "\tDirectory Exists."
 #----------------------------------------------------------------------------
 def getFileName(URL):
     URL=URL.split('/')
@@ -36,7 +36,7 @@ def downloadFile(title,fileURL):
     downloadDir=os.getcwd()
     os.chdir(tempDir)
     print "Downloading content - "+title
-    rc=os.system("wget -c "+fileURL)
+    rc=os.system("wget -c -q "+fileURL)
     if (rc==0):
         try:
             print "Moving "+getFileName(fileURL)+" from "+tempDir+" to "+downloadDir+"."
@@ -53,8 +53,15 @@ def downloadFile(title,fileURL):
 def processFeed(workingDir, curFeedURL):
     """Processes the current feed URL"""
     os.chdir(workingDir)
-    print "Downloading and parsing - "+curFeedURL
-    curFeed=feedparser.parse(curFeedURL)
+    rc=None
+    print "\nDownloading and parsing - "+curFeedURL
+
+    rc=os.system("wget -q -O "+tempDir+"/rss.xml "+curFeedURL)
+    if (rc==0):
+        curFeed=feedparser.parse(tempDir+"/rss.xml")
+    else:
+        print "Trying old method..."
+        curFeed=feedparser.parse(curFeedURL)
 
     checkCreateDir(workingDir,curFeed.feed.title)
     os.chdir(workingDir+"/"+curFeed.feed.title)
@@ -69,6 +76,21 @@ def processFeed(workingDir, curFeedURL):
                     downloadFile(curFeed.entries[item].title,curFeed.entries[item].enclosures[enc].href)
         except:
             print "Error Occurred."
+
+    #remove old files
+    for item in range(numItems,numItems+10):
+        try:
+            for enc in range(0,len(curFeed.entries[item].enclosures)):
+                if(os.path.exists(getFileName(curFeed.entries[item].enclosures[enc].href))==True):
+                    print "Removing "+os.getcwd()+"/"+getFileName(curFeed.entries[item].enclosures[enc].href)
+                    #remove file
+                    try:
+                        os.remove(os.getcwd()+"/"+getFileName(curFeed.entries[item].enclosures[enc].href))
+                    except:
+                        print "Error removing "+os.getcwd()+"/"+getFileName(curFeed.entries[item].enclosures[enc].href)
+        except:
+            #print "Error Occured."
+            pass
 #---------------------------------------------------------------------------
 def getSections():
     """Reads the config file and returns a list of the sections."""
@@ -95,9 +117,11 @@ def getFeeds(section):
             line = f.next()
             while not line.startswith('['):
                 item=line.strip()
-                item=item.split('=')
-                if (item[0]=="feedURL"):
-                    goodItems.append(item[1])
+                if not line.startswith('#'):
+                    goodItems.append(line.lstrip("feedURL="))
+                #item=item.split('=')
+                #if (item[0]=="feedURL"):
+                #    goodItems.append(item[1])
                 line = f.next()
             break
     except StopIteration:
@@ -153,11 +177,13 @@ try:
                 except AttributeError, detail:
                     print "An error has occured.\n"+curFeed
                     print detail
-                    os.system("sleep 30s")
-                    errors.append(curFeed+" has had the following error "+detail.args)
+                    os.system("sleep 5s")
+                    errors.append(curFeed+" has had an error")
         os.remove(tempDir+"/"+lockFile)
+        os.remove(tempDir+"/rss.xml")
 except KeyboardInterrupt:
     print "Canceled by user."
     os.remove(tempDir+"/"+lockFile)
+    os.remove(tempDir+"/rss.xml")
 
 print "Errors:\n",errors
